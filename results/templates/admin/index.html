@@ -1,0 +1,335 @@
+
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Examination Results Management System{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+
+<style>
+    /* Overall dashboard */
+    #content-main {
+        width: 100%;
+    }
+
+    #content {
+        padding: 25px 30px;
+    }
+
+    .dashboard-welcome {
+        background: linear-gradient(120deg, #142b4a, #245b91);
+        color: white;
+        padding: 32px;
+        border-radius: 14px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 18px rgba(20, 43, 74, 0.15);
+    }
+
+    .dashboard-welcome h1 {
+        color: white;
+        font-size: 27px;
+        font-weight: 700;
+        margin: 0 0 10px;
+    }
+
+    .dashboard-welcome p {
+        color: #dce8f5;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .welcome-label {
+        display: inline-block;
+        background: rgba(255,255,255,0.15);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        margin-bottom: 15px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* Statistics */
+    .section-heading {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--body-fg);
+        margin: 30px 0 17px;
+    }
+
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 18px;
+    }
+
+    .stat-card {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 12px;
+        padding: 23px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-top: 4px solid #2563a6;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 7px 20px rgba(0,0,0,0.07);
+    }
+
+    .stat-card:nth-child(2) {
+        border-top-color: #0d9488;
+    }
+
+    .stat-card:nth-child(3) {
+        border-top-color: #16a34a;
+    }
+
+    .stat-card:nth-child(4) {
+        border-top-color: #e59b24;
+    }
+
+    .stat-card h3 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--body-quiet-color);
+        margin: 0 0 15px;
+    }
+
+    .stat-card .number {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--body-fg);
+    }
+
+    /* Quick actions */
+    .dashboard-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 17px;
+    }
+
+    .shortcut {
+        display: block;
+        padding: 22px;
+        border: 1px solid var(--hairline-color);
+        border-radius: 12px;
+        text-decoration: none !important;
+        background: var(--body-bg);
+        transition: all 0.2s ease;
+    }
+
+    .shortcut:hover {
+        border-color: #2563a6;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+    }
+
+    .shortcut-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #e9f1fb;
+        color: #20568e;
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .shortcut strong {
+        display: block;
+        font-size: 15px;
+        color: var(--body-fg);
+        margin-bottom: 9px;
+    }
+
+    .shortcut span.description {
+        display: block;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--body-quiet-color);
+    }
+
+    .shortcut-arrow {
+        display: block;
+        margin-top: 15px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #2563a6;
+    }
+
+    /* Application management */
+    #content-main .module {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--hairline-color);
+        margin-bottom: 20px;
+    }
+
+    #content-main .module caption {
+        background: #1d4269;
+        color: white;
+        padding: 13px 16px;
+    }
+
+    #content-main .module caption a {
+        color: white;
+    }
+
+    #content-main .module th,
+    #content-main .module td {
+        padding: 12px 15px;
+    }
+
+    @media (max-width: 600px) {
+        #content {
+            padding: 15px;
+        }
+
+        .dashboard-welcome {
+            padding: 23px;
+        }
+
+        .dashboard-welcome h1 {
+            font-size: 22px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div id="content-main">
+
+    <!-- Welcome section -->
+    <div class="dashboard-welcome">
+
+        <span class="welcome-label">
+            Administrator Portal
+        </span>
+
+        <h1>Examination Results Dashboard</h1>
+
+        <p>
+            Welcome to your Student Identity Verification
+            and Examination Results Management System.
+        </p>
+
+    </div>
+
+
+    <!-- Statistics -->
+    <h2 class="section-heading">System Overview</h2>
+
+    <div class="dashboard-stats">
+
+        <div class="stat-card">
+            <h3>Total Registered Students</h3>
+            <div class="number">
+                {{ dashboard_stats.total_students|default:"0" }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Result Records</h3>
+            <div class="number">
+                {{ dashboard_stats.total_results|default:"0" }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Fee-Cleared Students</h3>
+            <div class="number">
+                {{ dashboard_stats.cleared_students|default:"0" }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Uncleared Students</h3>
+            <div class="number">
+                {{ dashboard_stats.uncleared_students|default:"0" }}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Quick actions -->
+    <h2 class="section-heading">Quick Actions</h2>
+
+    <div class="dashboard-shortcuts">
+
+        <a class="shortcut"
+           href="{% url 'admin:results_student_changelist' %}">
+
+            <div class="shortcut-icon">♙</div>
+
+            <strong>Manage Students</strong>
+
+            <span class="description">
+                Register, search and update student records.
+            </span>
+
+            <span class="shortcut-arrow">View Students →</span>
+        </a>
+
+
+        <a class="shortcut"
+           href="{% url 'admin:results_student_add' %}">
+
+            <div class="shortcut-icon">＋</div>
+
+            <strong>Register New Student</strong>
+
+            <span class="description">
+                Create and maintain a new student record.
+            </span>
+
+            <span class="shortcut-arrow">Add Student →</span>
+        </a>
+
+
+        <a class="shortcut"
+           href="{% url 'admin:results_studentresult_changelist' %}">
+
+            <div class="shortcut-icon">▤</div>
+
+            <strong>Manage Examination Results</strong>
+
+            <span class="description">
+                View, edit and manage examination results.
+            </span>
+
+            <span class="shortcut-arrow">View Results →</span>
+        </a>
+
+
+        <a class="shortcut"
+           href="{% url 'admin:results_studentresult_upload' %}">
+
+            <div class="shortcut-icon">⇧</div>
+
+            <strong>Upload Results</strong>
+
+            <span class="description">
+                Import examination results using CSV or Excel files.
+            </span>
+
+            <span class="shortcut-arrow">Upload Results →</span>
+        </a>
+
+    </div>
+
+
+    <!-- Management sections -->
+    <h2 class="section-heading">System Management</h2>
+
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+
+</div>
+
+{% endblock %}

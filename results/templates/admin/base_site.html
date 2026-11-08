@@ -1,0 +1,47 @@
+
+{% extends "admin/base.html" %}
+
+{% block title %}
+Examination Results Management System
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        ERMS | Examination Results Management System
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+
+<style>
+    #header {
+        background: #142b4a;
+        color: white;
+        padding: 14px 25px;
+    }
+
+    #site-name a {
+        color: white !important;
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+    #user-tools {
+        color: #dce8f5;
+    }
+
+    #user-tools a {
+        color: #ffffff !important;
+    }
+
+    #user-tools a:hover {
+        color: #a9d3ff !important;
+    }
+</style>
+{% endblock %}

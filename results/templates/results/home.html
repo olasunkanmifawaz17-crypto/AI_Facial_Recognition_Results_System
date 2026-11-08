@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Examination Results Management System</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #17243a;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #102746;
+            color: white;
+            padding: 22px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .brand span {
+            display: block;
+            font-size: 11px;
+            color: #b8c9df;
+            font-weight: normal;
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
+
+        .header-label {
+            font-size: 13px;
+            color: #d5e1ef;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 85px 20px 55px;
+        }
+
+        .hero-label {
+            color: #1769aa;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 {
+            font-size: clamp(30px, 5vw, 46px);
+            line-height: 1.2;
+            max-width: 750px;
+            margin: auto;
+            color: #102746;
+        }
+
+        .hero p {
+            max-width: 600px;
+            margin: 20px auto 0;
+            color: #64748b;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .portal-section {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 15px 20px 80px;
+        }
+
+        .section-heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section-heading h2 {
+            font-size: 23px;
+            color: #102746;
+        }
+
+        .section-heading p {
+            margin-top: 9px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .portal-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 13px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 25px rgba(15, 35, 65, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 13px 30px rgba(15, 35, 65, 0.10);
+        }
+
+        .icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            background: #eaf2fb;
+            color: #1769aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+            margin-bottom: 22px;
+        }
+
+        .portal-card h3 {
+            font-size: 21px;
+            margin-bottom: 12px;
+            color: #102746;
+        }
+
+        .portal-card p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.8;
+            min-height: 75px;
+            margin-bottom: 22px;
+        }
+
+        .portal-button {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            padding: 14px;
+            background: #1769aa;
+            color: white;
+            border-radius: 7px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .portal-button:hover {
+            background: #105387;
+        }
+
+        .student-button {
+            background: #102746;
+        }
+
+        .student-button:hover {
+            background: #1b3d67;
+        }
+
+        .security-note {
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+            margin-top: 28px;
+        }
+
+        footer {
+            background: #102746;
+            color: #c5d1df;
+            text-align: center;
+            padding: 23px 15px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 650px) {
+            header {
+                padding: 18px 5%;
+            }
+
+            .header-label {
+                display: none;
+            }
+
+            .hero {
+                padding-top: 60px;
+            }
+
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-card p {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">
+        EXAMINATION PORTAL
+        <span>ACADEMIC RESULTS MANAGEMENT SYSTEM</span>
+    </div>
+
+    <div class="header-label">
+        Official Student Academic Portal
+    </div>
+</header>
+
+<section class="hero">
+
+    <div class="hero-label">
+        STUDENT ACADEMIC SERVICES
+    </div>
+
+    <h1>
+        Welcome to the Examination Results Portal
+    </h1>
+
+    <p>
+        A secure academic platform for student identity verification
+        and examination results management. Select your portal below
+        to continue.
+    </p>
+
+</section>
+
+<section class="portal-section">
+
+    <div class="section-heading">
+        <h2>Choose Your Portal</h2>
+        <p>Select the appropriate access option to proceed.</p>
+    </div>
+
+    <div class="portal-grid">
+
+        <!-- ADMINISTRATOR / LECTURER -->
+
+        <div class="portal-card">
+
+            <div class="icon">⚙</div>
+
+            <h3>Admin / Lecturer</h3>
+
+            <p>
+                Access the administrative portal to register students,
+                manage facial records, upload examination results,
+                update scores and manage fee clearance.
+            </p>
+
+            <a href="{% url 'admin:login' %}"
+               class="portal-button">
+                Administrator Login →
+            </a>
+
+        </div>
+
+
+        <!-- STUDENT -->
+
+        <div class="portal-card">
+
+            <div class="icon">🎓</div>
+
+            <h3>Student Portal</h3>
+
+            <p>
+                Access your academic records by entering your
+                matriculation number and completing secure
+                facial identity verification.
+            </p>
+
+            <a href="{% url 'camera_test' %}"
+               class="portal-button student-button">
+                Access Student Portal →
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="security-note">
+        <p>Student results are accessible only after successful identity verification and eligibility checks.</p>
+    </div>
+
+</section>
+
+<footer>
+    Examination Results Management System
+    <br><br>
+    Secure Academic Records Management
+</footer>
+
+</body>
+</html>

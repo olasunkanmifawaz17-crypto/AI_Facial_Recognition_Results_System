@@ -1,0 +1,53 @@
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django database and sensitive files
+db.sqlite3
+db.sqlite3-journal
+.env
+.env.*
+!.env.example
+
+# Student biometric information
+dataset/
+dataset_backup/
+face_embeddings.npy
+face_embeddings*.npy
+labels.npy
+face_model.yml
+
+# Recognition test records
+recognition_test_log.csv
+
+# Temporary and backup scripts
+*_backup.py
+*_checkpoint.py
+register_student_powershell.py
+*.bak
+*.backup
+*.backup.*
+*.tmp
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test and coverage files
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+htmlcov/

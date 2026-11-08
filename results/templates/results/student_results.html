@@ -1,0 +1,884 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Academic Results</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #142b4a;
+            --blue: #2563a6;
+            --blue-light: #edf4fc;
+            --text: #263445;
+            --muted: #758397;
+            --border: #e5eaf0;
+            --background: #f3f6fa;
+            --white: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 35px 18px;
+            background: var(--background);
+            color: var(--text);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: var(--white);
+            border-radius: 13px;
+            overflow: hidden;
+            box-shadow: 0 8px 35px rgba(20, 43, 74, 0.07);
+        }
+
+        /* HEADER */
+
+        .header {
+            background: linear-gradient(120deg, #142b4a, #245b91);
+            color: white;
+            padding: 35px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-label {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            color: #c9dcf2;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 25px;
+            margin: 0 0 9px;
+            font-weight: 750;
+        }
+
+        .header p {
+            margin: 5px 0;
+            color: #dce8f5;
+            font-size: 12px;
+        }
+
+        .header-badge {
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 13px 17px;
+            text-align: center;
+            min-width: 130px;
+        }
+
+        .header-badge strong {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .header-badge span {
+            font-size: 10px;
+            color: #dce8f5;
+        }
+
+        /* MAIN CONTENT */
+
+        .content {
+            padding: 35px 40px;
+        }
+
+        .section-heading {
+            color: var(--navy);
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0 0 17px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin: -10px 0 18px;
+        }
+
+        /* STUDENT INFORMATION */
+
+        .student-card {
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 24px;
+            margin-bottom: 25px;
+        }
+
+        .student-card h3 {
+            margin: 0 0 22px;
+            font-size: 15px;
+            color: var(--navy);
+        }
+
+        .student-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 23px 30px;
+        }
+
+        .detail span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 7px;
+        }
+
+        .detail strong {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 650;
+        }
+
+        .verified {
+            color: #15803d !important;
+        }
+
+        /* CGPA */
+
+        .cgpa-card {
+            background: linear-gradient(110deg, #edf4fc, #f5f8fd);
+            border: 1px solid #dce8f5;
+            border-radius: 11px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .cgpa-card h3 {
+            color: var(--navy);
+            font-size: 16px;
+            margin: 0 0 7px;
+        }
+
+        .cgpa-card p {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .cgpa-value {
+            font-size: 29px;
+            font-weight: 800;
+            color: var(--blue);
+            white-space: nowrap;
+        }
+
+        /* ACADEMIC SESSIONS */
+
+        .session {
+            margin-top: 32px;
+        }
+
+        .session-title {
+            background: var(--navy);
+            color: white;
+            padding: 17px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 650;
+            letter-spacing: 0.2px;
+        }
+
+        .semester {
+            margin-top: 20px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: hidden;
+        }
+
+        .semester-header {
+            background: #f0f5fb;
+            padding: 16px 19px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            color: var(--navy);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .course-count {
+            font-size: 11px;
+            background: white;
+            border: 1px solid #dce5ef;
+            border-radius: 20px;
+            padding: 6px 11px;
+            white-space: nowrap;
+        }
+
+        /* RESULTS TABLE */
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 15px 17px;
+            text-align: left;
+            border-bottom: 1px solid #edf0f4;
+            font-size: 12px;
+        }
+
+        th {
+            background: #fafbfd;
+            color: #64748b;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .score {
+            font-weight: 750;
+            color: var(--navy);
+        }
+
+        .grade {
+            display: inline-block;
+            min-width: 34px;
+            padding: 5px 9px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .grade-a {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .grade-b {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .grade-c {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .grade-d, .grade-e {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .grade-f {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* SEMESTER SUMMARY */
+
+        .semester-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+        }
+
+        .summary-item {
+            padding: 5px;
+        }
+
+        .summary-item span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 9px;
+        }
+
+        .summary-item strong {
+            font-size: 19px;
+            color: var(--navy);
+        }
+
+        .pending {
+            color: #a16207 !important;
+            font-size: 12px !important;
+        }
+
+        /* GRADING SCALE */
+
+        .grading-scale {
+            margin-top: 32px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: hidden;
+        }
+
+        .grading-scale h3 {
+            background: #f0f5fb;
+            color: var(--navy);
+            font-size: 14px;
+            margin: 0;
+            padding: 16px 19px;
+        }
+
+        .grading-scale table {
+            min-width: 0;
+        }
+
+        .grading-scale td,
+        .grading-scale th {
+            padding: 12px 18px;
+        }
+
+        /* NOTICES */
+
+        .notice {
+            background: #fff8e8;
+            border: 1px solid #f4d99c;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            color: #805b16;
+        }
+
+        .notice h3 {
+            margin: 0 0 12px;
+            font-size: 19px;
+        }
+
+        .notice p {
+            font-size: 13px;
+            line-height: 1.7;
+            margin: 7px 0;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 45px 20px;
+            border: 1px dashed #d5dee8;
+            border-radius: 10px;
+            color: var(--muted);
+        }
+
+        .empty h3 {
+            color: var(--navy);
+            font-size: 17px;
+        }
+
+        .empty p {
+            font-size: 13px;
+        }
+
+        .empty-semester {
+            padding: 25px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* PRINT BUTTON */
+
+        .print-button {
+            display: block;
+            margin: 30px auto 0;
+            padding: 13px 27px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 650;
+            transition: background 0.2s;
+        }
+
+        .print-button:hover {
+            background: var(--navy);
+        }
+
+        /* FOOTER */
+
+        .footer {
+            border-top: 1px solid var(--border);
+            background: #fafbfd;
+            padding: 22px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        /* RESPONSIVE DESIGN */
+
+        @media (max-width: 650px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 25px 20px;
+            }
+
+            .header-badge {
+                display: none;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 22px 17px;
+            }
+
+            .student-details {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .cgpa-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .semester-summary {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .semester-header {
+                align-items: flex-start;
+            }
+        }
+
+        /* PRINT LAYOUT */
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 12mm;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px 0;
+            }
+
+            .print-button {
+                display: none !important;
+            }
+
+            .header, .session-title,
+            .semester-header, .grading-scale h3 {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .semester {
+                break-inside: avoid;
+            }
+
+            .student-card, .cgpa-card,
+            .grading-scale, .notice {
+                break-inside: avoid;
+            }
+
+            table {
+                min-width: 0;
+            }
+
+            th, td {
+                padding: 9px 7px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div>
+            <span class="header-label">STUDENT ACADEMIC PORTAL</span>
+
+            <h1>Examination Results</h1>
+
+            <p>Examination Results Management System</p>
+            <p>Official Student Academic Record</p>
+        </div>
+
+        <div class="header-badge">
+            <strong>ACADEMIC RECORD</strong>
+            <span>Student Portal</span>
+        </div>
+
+    </header>
+
+
+    <main class="content">
+
+        <!-- STUDENT INFORMATION -->
+
+        <section class="student-card">
+
+            <h3>Student Information</h3>
+
+            <div class="student-details">
+
+                <div class="detail">
+                    <span>Full Name</span>
+                    <strong>
+                        {{ student.first_name }} {{ student.last_name }}
+                    </strong>
+                </div>
+
+                <div class="detail">
+                    <span>Matriculation Number</span>
+                    <strong>{{ student.matric_number }}</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Department</span>
+                    <strong>{{ student.department }}</strong>
+                </div>
+
+                <div class="detail">
+                    <span>Academic Record Status</span>
+                    <strong class="verified">Identity Verified</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        {% if not fee_cleared %}
+
+            <!-- PAYMENT CLEARANCE -->
+
+            <div class="notice">
+
+                <h3>Payment Clearance Required</h3>
+
+                <p>
+                    Your identity has been verified, but your school
+                    fee clearance has not been confirmed.
+                </p>
+
+                <p>
+                    Please contact the appropriate administrative
+                    office for assistance.
+                </p>
+
+            </div>
+
+        {% else %}
+
+
+            {% if academic_sessions %}
+
+                <!-- CGPA -->
+
+                <section class="cgpa-card">
+
+                    <div>
+                        <h3>Cumulative Grade Point Average (CGPA)</h3>
+
+                        <p>
+                            Calculated across all available academic sessions.
+                        </p>
+                    </div>
+
+                    <div class="cgpa-value">
+
+                        {% if cgpa_available %}
+                            {{ cgpa|floatformat:2 }} / 5.00
+                        {% else %}
+                            <span class="pending">
+                                Pending credit units
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </section>
+
+
+                <!-- ACADEMIC SESSIONS -->
+
+                {% for session_name, semesters in academic_sessions.items %}
+
+                    <section class="session">
+
+                        <div class="session-title">
+                            Academic Session: {{ session_name }}
+                        </div>
+
+
+                        {% for semester_name, semester_data in semesters.items %}
+
+                            <div class="semester">
+
+                                <div class="semester-header">
+
+                                    <span>{{ semester_name }} Semester</span>
+
+                                    <span class="course-count">
+                                        {{ semester_data.course_count }} Courses
+                                    </span>
+
+                                </div>
+
+
+                                {% if semester_data.courses %}
+
+                                    <!-- COURSE RESULTS -->
+
+                                    <div class="table-wrapper">
+
+                                        <table>
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Course Code</th>
+                                                    <th>Course Title</th>
+                                                    <th>Score</th>
+                                                    <th>Credit Unit</th>
+                                                    <th>Grade</th>
+                                                    <th>Grade Point</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+
+                                                {% for result in semester_data.courses %}
+
+                                                    <tr>
+
+                                                        <td>
+                                                            {{ result.course_code }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ result.course_title }}
+                                                        </td>
+
+                                                        <td class="score">
+                                                            {{ result.score|floatformat:2 }}
+                                                        </td>
+
+                                                        <td>
+                                                            {% if result.credit_unit %}
+                                                                {{ result.credit_unit }}
+                                                            {% else %}
+                                                                <span class="pending">
+                                                                    Pending
+                                                                </span>
+                                                            {% endif %}
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="grade grade-{{ result.grade|lower }}">
+                                                                {{ result.grade }}
+                                                            </span>
+                                                        </td>
+
+                                                        <td>
+                                                            {{ result.grade_point }}
+                                                        </td>
+
+                                                    </tr>
+
+                                                {% endfor %}
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+
+                                    <!-- SEMESTER SUMMARY -->
+
+                                    <div class="semester-summary">
+
+                                        <div class="summary-item">
+                                            <span>Semester Average</span>
+
+                                            <strong>
+                                                {{ semester_data.average|floatformat:2 }}%
+                                            </strong>
+                                        </div>
+
+
+                                        <div class="summary-item">
+                                            <span>Semester Credit Units</span>
+
+                                            {% if semester_data.gpa_available %}
+                                                <strong>
+                                                    {{ semester_data.total_credit_units }}
+                                                </strong>
+                                            {% else %}
+                                                <strong class="pending">
+                                                    Pending
+                                                </strong>
+                                            {% endif %}
+
+                                        </div>
+
+
+                                        <div class="summary-item">
+                                            <span>Semester GPA</span>
+
+                                            {% if semester_data.gpa_available %}
+                                                <strong>
+                                                    {{ semester_data.gpa|floatformat:2 }} / 5.00
+                                                </strong>
+                                            {% else %}
+                                                <strong class="pending">
+                                                    Pending
+                                                </strong>
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+
+                                {% else %}
+
+                                    <div class="empty-semester">
+                                        No results available for this semester.
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </section>
+
+                {% endfor %}
+
+
+                <!-- GRADING SYSTEM -->
+
+                <section class="grading-scale">
+
+                    <h3>Official Grading System</h3>
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Score Range</th>
+                                <th>Grade</th>
+                                <th>Grade Point</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr><td>70 - 100</td><td>A</td><td>5</td></tr>
+                            <tr><td>60 - 69</td><td>B</td><td>4</td></tr>
+                            <tr><td>50 - 59</td><td>C</td><td>3</td></tr>
+                            <tr><td>45 - 49</td><td>D</td><td>2</td></tr>
+                            <tr><td>40 - 44</td><td>E</td><td>1</td></tr>
+                            <tr><td>0 - 39</td><td>F</td><td>0</td></tr>
+                        </tbody>
+
+                    </table>
+
+                </section>
+
+
+            {% else %}
+
+                <div class="empty">
+
+                    <h3>No Examination Results Available</h3>
+
+                    <p>
+                        Your examination results have not yet been uploaded.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+            {% if results %}
+
+                <button
+                    class="print-button"
+                    onclick="window.print()"
+                >
+                    Print Results Slip
+                </button>
+
+            {% endif %}
+
+
+        {% endif %}
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+        Examination Results Management System
+        <br>
+        Official Student Academic Record
+    </footer>
+
+</div>
+
+</body>
+</html>

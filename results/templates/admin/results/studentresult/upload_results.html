@@ -1,0 +1,72 @@
+
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<div style="max-width: 700px;">
+
+    <form method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+
+            <h2>Results File</h2>
+
+            <div class="form-row">
+                {{ form.file.errors }}
+                {{ form.file.label_tag }}
+                {{ form.file }}
+                <div class="help">
+                    {{ form.file.help_text }}
+                </div>
+            </div>
+
+        </fieldset>
+
+        <fieldset class="module aligned">
+
+            <h2>Import Mode</h2>
+
+            <div class="form-row">
+                {{ form.import_mode.errors }}
+                {{ form.import_mode.label_tag }}
+                {{ form.import_mode }}
+            </div>
+
+            <p>
+                <strong>Update existing results:</strong>
+                Adds new records and overwrites matching student-course
+                records. Other existing results remain untouched.
+            </p>
+
+            <p>
+                <strong>Replace entire dataset:</strong>
+                Deletes all existing student results before importing
+                the new spreadsheet.
+            </p>
+
+            <p style="color: #ba2121;">
+                Warning: Replacement affects every student's results,
+                not just the students listed in the uploaded file.
+            </p>
+
+        </fieldset>
+
+        <div class="submit-row">
+            <input
+                type="submit"
+                value="Upload results"
+                class="default"
+            >
+
+            <a href="{% url 'admin:results_studentresult_changelist' %}">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

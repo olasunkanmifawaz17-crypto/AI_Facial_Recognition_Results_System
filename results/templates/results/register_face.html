@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Facial Registration</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 30px 15px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        }
+
+        h2 { margin-top: 0; }
+
+        .student-info {
+            background: #f0f4f8;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        video {
+            width: 100%;
+            max-height: 430px;
+            background: #111;
+            border-radius: 8px;
+            transform: scaleX(-1);
+        }
+
+        .instruction {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0 10px;
+        }
+
+        .status {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .progress-container {
+            background: #ddd;
+            height: 14px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #16834a;
+            transition: width 0.2s;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 12px 22px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 15px;
+            color: white;
+        }
+
+        #startButton { background: #1769aa; }
+        #stopButton { background: #c0392b; }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success {
+            color: #16834a;
+            font-weight: bold;
+        }
+
+        .error { color: #c0392b; }
+
+        .embedding-info {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f4f8;
+            border-radius: 6px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Student Facial Registration</h2>
+
+    <div class="student-info">
+        <strong>Student:</strong>
+        {{ student.first_name }} {{ student.last_name }}
+        <br>
+        <strong>Matric Number:</strong>
+        {{ student.matric_number }}
+        <br>
+        <strong>Department:</strong>
+        {{ student.department }}
+    </div>
+
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas" hidden></canvas>
+
+    <div class="instruction" id="instruction">
+        Ready to begin facial registration
+    </div>
+
+    <div class="status" id="status">
+        Click Start Registration to begin.
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="progress-text" id="progressText">
+        0 / 30 images captured
+    </div>
+
+    <div class="embedding-info" id="embeddingInfo"></div>
+
+    <div class="buttons">
+        <button id="startButton" onclick="startRegistration()">
+            Start Registration
+        </button>
+
+        <button id="stopButton" onclick="stopRegistration()" disabled>
+            Stop Registration
+        </button>
+    </div>
+
+    <form id="csrfForm" hidden>
+        {% csrf_token %}
+    </form>
+
+</div>
+
+<script>
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+
+const instruction = document.getElementById("instruction");
+const statusText = document.getElementById("status");
+
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+
+const startButton = document.getElementById("startButton");
+const stopButton = document.getElementById("stopButton");
+const embeddingInfo = document.getElementById("embeddingInfo");
+
+const csrfToken = document.querySelector(
+    '[name=csrfmiddlewaretoken]'
+).value;
+
+const studentId = "{{ student.pk }}";
+
+let cameraStream = null;
+let registrationRunning = false;
+let registrationComplete = false;
+
+function showMessage(message, type = "") {
+    statusText.textContent = message;
+    statusText.className = "status " + type;
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+
+    video.srcObject = null;
+}
+
+async function startRegistration() {
+
+    startButton.disabled = true;
+
+    try {
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: "user"
+            },
+            audio: false
+        });
+
+        video.srcObject = cameraStream;
+        await video.play();
+
+        const formData = new FormData();
+        formData.append("student_id", studentId);
+
+        const response = await fetch(
+            "{% url 'start_face_registration' %}",
+            {
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken },
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Could not start registration.");
+        }
+
+        registrationRunning = true;
+        stopButton.disabled = false;
+
+        instruction.textContent = data.instruction;
+        showMessage(data.message);
+
+        processFrames();
+
+    } catch (error) {
+
+        stopCamera();
+        startButton.disabled = false;
+        showMessage(error.message, "error");
+
+    }
+}
+
+async function processFrames() {
+
+    while (registrationRunning && !registrationComplete) {
+
+        if (video.readyState < 2) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const context = canvas.getContext("2d");
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, "image/jpeg", 0.85);
+        });
+
+        if (!blob) {
+            showMessage("Could not capture camera frame.", "error");
+            break;
+        }
+
+        const formData = new FormData();
+        formData.append("frame", blob, "frame.jpg");
+
+        try {
+
+            const response = await fetch(
+                "{% url 'receive_registration_frame' %}",
+                {
+                    method: "POST",
+                    headers: { "X-CSRFToken": csrfToken },
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Frame processing failed.");
+            }
+
+            instruction.textContent = data.instruction;
+            showMessage(data.status);
+
+            progressText.textContent =
+                `${data.progress} / ${data.total} images captured`;
+
+            progressBar.style.width =
+                `${(data.progress / data.total) * 100}%`;
+
+            if (data.complete) {
+
+                registrationComplete = true;
+                registrationRunning = false;
+
+                stopCamera();
+
+                instruction.textContent = "Registration completed!";
+
+                stopButton.disabled = true;
+                startButton.textContent = "Completed";
+
+                if (data.embedding_ready === true) {
+
+                    showMessage(
+                        "Facial registration and embedding generation completed successfully.",
+                        "success"
+                    );
+
+                    embeddingInfo.style.display = "block";
+
+                    embeddingInfo.innerHTML = `
+                        <strong>Facial Registration:</strong> Successful<br>
+                        <strong>Embedding Generation:</strong> Successful<br>
+                        <strong>Embeddings Generated:</strong> ${data.embeddings_count}<br>
+                        <strong>Total Registered Students:</strong> ${data.total_students}
+                    `;
+
+                } else {
+
+                    showMessage(
+                        data.message || "Images saved, but embedding generation failed.",
+                        "error"
+                    );
+
+                    embeddingInfo.style.display = "block";
+
+                    embeddingInfo.textContent =
+                        "Embedding generation was unsuccessful. Check the Django terminal for details.";
+                }
+
+                break;
+            }
+
+        } catch (error) {
+
+            registrationRunning = false;
+            stopCamera();
+
+            startButton.disabled = false;
+            stopButton.disabled = true;
+
+            showMessage(error.message, "error");
+            break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+}
+
+async function stopRegistration() {
+
+    registrationRunning = false;
+    stopCamera();
+
+    stopButton.disabled = true;
+    startButton.disabled = false;
+
+    try {
+
+        const response = await fetch(
+            "{% url 'stop_face_registration' %}",
+            {
+                method: "POST",
+                headers: { "X-CSRFToken": csrfToken }
+            }
+        );
+
+        const data = await response.json();
+
+        showMessage(data.message);
+        instruction.textContent = "Registration stopped.";
+
+        progressBar.style.width = "0%";
+        progressText.textContent = "Incomplete registration";
+
+    } catch (error) {
+
+        showMessage(
+            "Could not confirm registration cancellation. Check the server.",
+            "error"
+        );
+    }
+}
+
+</script>
+
+</body>
+</html>

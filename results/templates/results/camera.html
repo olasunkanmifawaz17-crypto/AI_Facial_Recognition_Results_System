@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Facial Verification</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        input {
+            padding: 12px;
+            width: 80%;
+            max-width: 350px;
+            margin: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        video {
+            width: 100%;
+            max-width: 560px;
+            background: black;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 12px 22px;
+            margin: 12px 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #1769aa;
+            color: white;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        #status, #result {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Student Facial Verification</h2>
+
+    <p>Enter your matric number before starting verification.</p>
+
+    <input
+        type="text"
+        id="matricNumber"
+        placeholder="Enter matric number"
+        autocomplete="off"
+    >
+
+    <br>
+
+    <video id="video" autoplay playsinline></video>
+
+    <canvas id="canvas" hidden></canvas>
+
+    <form id="captureForm">
+        {% csrf_token %}
+    </form>
+
+    <br>
+
+    <button id="startBtn">Start Camera</button>
+    <button id="stopBtn">Stop Camera</button>
+    <button id="captureBtn" disabled>Start Verification</button>
+
+    <p id="status">Camera not started.</p>
+    <p id="result"></p>
+
+</div>
+
+<script>
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+
+    const matricInput = document.getElementById("matricNumber");
+
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const captureBtn = document.getElementById("captureBtn");
+
+    let cameraStream = null;
+    let verifying = false;
+
+    // START CAMERA
+    startBtn.onclick = async function () {
+
+        if (cameraStream) {
+            return;
+        }
+
+        try {
+
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 480 },
+                    height: { ideal: 360 }
+                },
+                audio: false
+            });
+
+            video.srcObject = cameraStream;
+
+            await video.play();
+
+            status.textContent = "Camera started successfully.";
+            result.textContent = "";
+
+            captureBtn.disabled = false;
+            startBtn.disabled = true;
+
+        } catch (error) {
+
+            cameraStream = null;
+            status.textContent = "Camera error: " + error.message;
+
+        }
+    };
+
+
+    // STOP CAMERA
+    stopBtn.onclick = function () {
+
+        verifying = false;
+
+        if (cameraStream) {
+
+            cameraStream.getTracks().forEach(track => track.stop());
+
+            video.srcObject = null;
+            cameraStream = null;
+
+        }
+
+        captureBtn.disabled = true;
+        startBtn.disabled = false;
+        captureBtn.textContent = "Start Verification";
+        matricInput.disabled = false;
+
+        status.textContent = "Camera stopped.";
+    };
+
+
+    // START / STOP VERIFICATION
+    captureBtn.onclick = async function () {
+
+        if (verifying) {
+            verifying = false;
+            captureBtn.textContent = "Start Verification";
+            result.textContent = "Verification stopped.";
+            matricInput.disabled = false;
+            return;
+        }
+
+        const matricNumber = matricInput.value.trim();
+
+        if (!matricNumber) {
+            result.textContent = "Enter your matric number first.";
+            return;
+        }
+
+        if (!cameraStream) {
+            result.textContent = "Start the camera first.";
+            return;
+        }
+
+        verifying = true;
+
+        captureBtn.textContent = "Stop Verification";
+        matricInput.disabled = true;
+
+        result.textContent = "Verification started...";
+
+        const context = canvas.getContext("2d");
+
+        while (verifying) {
+
+            if (!cameraStream || video.readyState < 2) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                continue;
+            }
+
+            // Capture frame at the camera's actual resolution
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            context.drawImage(
+                video,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            // Compress JPEG before upload
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, "image/jpeg", 0.85);
+            });
+
+            if (!verifying) {
+                break;
+            }
+
+            if (!blob) {
+                result.textContent = "Frame capture failed.";
+                verifying = false;
+                break;
+            }
+
+            const formData = new FormData();
+
+            formData.append("frame", blob, "frame.jpg");
+            formData.append("matric_number", matricNumber);
+
+            const csrfToken = document.querySelector(
+                '[name=csrfmiddlewaretoken]'
+            ).value;
+
+            try {
+
+                const response = await fetch("{% url 'receive_frame' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log("VERIFICATION SERVER RESPONSE:", data);
+            
+                if (!verifying) {
+                    break;
+                }
+
+                result.textContent = data.message;
+
+                if (!response.ok) {
+                    verifying = false;
+                    break;
+                }
+
+                status.textContent =
+                    `Progress: ${data.progress || 0}/15 | Matching frames: ${data.matches || 0}/15`;
+
+                if (data.verified) {
+
+                    verifying = false;
+
+                    status.textContent =
+                        "Identity successfully verified!";
+
+                    result.textContent = "IDENTITY VERIFIED";
+
+                    // Stop camera before redirecting
+                    if (cameraStream) {
+                        cameraStream.getTracks().forEach(track => track.stop());
+                        cameraStream = null;
+                    }
+
+                    captureBtn.disabled = true;
+                    startBtn.disabled = true;
+
+                    result.textContent =
+                        "Identity verified. Redirecting to your results...";
+
+                    setTimeout(() => {
+                        window.location.href = "{% url 'student_results' %}";
+                    }, 700);
+
+                    break;
+                }
+
+                // Short pause between frame submissions
+                await new Promise(resolve => setTimeout(resolve, 250));
+
+            } catch (error) {
+
+                result.textContent =
+                    "Upload failed: " + error.message;
+
+                verifying = false;
+
+            }
+        }
+
+        if (verifying === false && cameraStream) {
+            captureBtn.textContent = "Start Verification";
+            captureBtn.disabled = false;
+            matricInput.disabled = false;
+        }
+
+    };
+
+</script>
+
+</body>
+</html>
