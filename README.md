@@ -76,7 +76,7 @@ AI_Facial_Recognition_Results_System/
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/olasunkanmifawaz17-crypto/AI_Facial_Recognition_Results_System
 cd AI_Facial_Recognition_Results_System
 ```
 
