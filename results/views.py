@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 
@@ -62,6 +61,12 @@ def receive_frame(request):
         return JsonResponse({
             "message": "Student record not found."
         }, status=404)
+
+    # Refresh embeddings only if this student's data
+    # is missing from the recognition service's memory.
+    if matric_number not in recognition_service.student_embeddings:
+
+        recognition_service.reload_embeddings()
 
     if matric_number not in recognition_service.student_embeddings:
         return JsonResponse({

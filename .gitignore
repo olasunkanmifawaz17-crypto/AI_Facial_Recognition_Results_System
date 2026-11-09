@@ -51,3 +51,9 @@ Thumbs.db
 .nox/
 .coverage
 htmlcov/
+# Collected static files
+staticfiles/
+
+# Local student records and restoration files
+results_backup.json
+restore_old_data.py

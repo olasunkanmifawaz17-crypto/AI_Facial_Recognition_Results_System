@@ -1,3 +1,4 @@
+
 from django.db import models
 from django.core.validators import (
     MinValueValidator,
@@ -17,6 +18,22 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.matric_number} - {self.first_name} {self.last_name}"
+
+
+class StudentFaceEmbedding(models.Model):
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="face_embeddings"
+    )
+
+    # Stores the student's facial embedding vectors.
+    embedding_data = models.JSONField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Facial embeddings - {self.student.matric_number}"
 
 
 class StudentResult(models.Model):

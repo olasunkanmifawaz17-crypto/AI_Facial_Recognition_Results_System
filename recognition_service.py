@@ -3,11 +3,20 @@ import os
 import cv2
 import numpy as np
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-EMBEDDINGS_FILE = os.path.join(BASE_DIR, "face_embeddings.npy")
-YUNET_MODEL = os.path.join(BASE_DIR, "models", "face_detection_yunet_2023mar.onnx")
-SFACE_MODEL = os.path.join(BASE_DIR, "models", "face_recognition_sface_2021dec.onnx")
+YUNET_MODEL = os.path.join(
+    BASE_DIR,
+    "models",
+    "face_detection_yunet_2023mar.onnx"
+)
+
+SFACE_MODEL = os.path.join(
+    BASE_DIR,
+    "models",
+    "face_recognition_sface_2021dec.onnx"
+)
 
 
 class FaceRecognitionService:
@@ -29,29 +38,28 @@ class FaceRecognitionService:
 
     def reload_embeddings(self):
 
-        if not os.path.isfile(EMBEDDINGS_FILE):
-            raise FileNotFoundError(
-                "Facial embeddings file not found."
-            )
+        from results.models import StudentFaceEmbedding
 
-        loaded_embeddings = np.load(
-            EMBEDDINGS_FILE,
-            allow_pickle=True
-        ).item()
+        records = StudentFaceEmbedding.objects.select_related(
+            "student"
+        ).all()
 
+        loaded_embeddings = {}
         normalized_embeddings = {}
 
-        for matric_number, features in loaded_embeddings.items():
+        for record in records:
+
+            matric_number = record.student.matric_number
 
             features = np.asarray(
-                features,
+                record.embedding_data,
                 dtype=np.float32
             )
 
             if features.ndim != 2 or len(features) == 0:
-                normalized_embeddings[matric_number] = np.empty(
-                    (0, 128), dtype=np.float32
-                )
+                continue
+
+            if features.shape[1] != 128:
                 continue
 
             norms = np.linalg.norm(
@@ -69,20 +77,19 @@ class FaceRecognitionService:
             norms = norms[valid]
 
             if len(features) == 0:
-                normalized_embeddings[matric_number] = np.empty(
-                    (0, features.shape[1]), dtype=np.float32
-                )
                 continue
 
+            normalized_features = features / norms
+
+            loaded_embeddings[matric_number] = features
             normalized_embeddings[matric_number] = (
-                features / norms
+                normalized_features
             )
 
-        # Update both dictionaries only after successful loading.
         self.student_embeddings = loaded_embeddings
         self.normalized_embeddings = normalized_embeddings
 
-        return len(loaded_embeddings)
+        return len(normalized_embeddings)
 
     def check_face_quality(self, frame, face):
 
@@ -130,7 +137,9 @@ class FaceRecognitionService:
                 "message": "Student embeddings unavailable."
             }
 
-        stored_features = self.normalized_embeddings[matric_number]
+        stored_features = self.normalized_embeddings[
+            matric_number
+        ]
 
         if len(stored_features) == 0:
             return {

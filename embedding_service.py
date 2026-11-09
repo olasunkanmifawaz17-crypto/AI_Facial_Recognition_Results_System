@@ -3,16 +3,14 @@ import os
 import cv2
 import hashlib
 import shutil
-import tempfile
 import numpy as np
 
-from datetime import datetime
+from django.db import transaction
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATASET_PATH = os.path.join(BASE_DIR, "dataset")
-EMBEDDINGS_FILE = os.path.join(BASE_DIR, "face_embeddings.npy")
 
 DETECTOR_MODEL = os.path.join(
     BASE_DIR, "models", "face_detection_yunet_2023mar.onnx"
@@ -28,42 +26,6 @@ MIN_FACE_SIZE = 120
 MIN_BLUR_SCORE = 50
 MIN_BRIGHTNESS = 45
 MAX_BRIGHTNESS = 210
-
-
-def save_embeddings_atomically(embeddings):
-
-    fd, temporary_file = tempfile.mkstemp(
-        dir=BASE_DIR,
-        suffix=".tmp"
-    )
-
-    try:
-        with os.fdopen(fd, "wb") as file:
-            np.save(file, embeddings, allow_pickle=True)
-
-        os.replace(temporary_file, EMBEDDINGS_FILE)
-
-    except Exception:
-        if os.path.exists(temporary_file):
-            os.remove(temporary_file)
-        raise
-
-
-def backup_embeddings():
-
-    if not os.path.isfile(EMBEDDINGS_FILE):
-        return None
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-
-    backup_file = os.path.join(
-        BASE_DIR,
-        f"face_embeddings_{timestamp}.backup.npy"
-    )
-
-    shutil.copy2(EMBEDDINGS_FILE, backup_file)
-
-    return backup_file
 
 
 def check_image_quality(image, face):
@@ -104,7 +66,10 @@ def check_image_quality(image, face):
 
 def extract_student_embeddings(matric_number):
 
-    student_folder = os.path.join(DATASET_PATH, matric_number)
+    student_folder = os.path.join(
+        DATASET_PATH,
+        matric_number
+    )
 
     if not os.path.isdir(student_folder):
         raise ValueError("Student facial dataset was not found.")
@@ -143,10 +108,15 @@ def extract_student_embeddings(matric_number):
 
     for filename in image_files:
 
-        image_path = os.path.join(student_folder, filename)
+        image_path = os.path.join(
+            student_folder,
+            filename
+        )
 
         with open(image_path, "rb") as file:
-            image_hash = hashlib.sha256(file.read()).hexdigest()
+            image_hash = hashlib.sha256(
+                file.read()
+            ).hexdigest()
 
         if image_hash in seen_hashes:
             continue
@@ -159,6 +129,7 @@ def extract_student_embeddings(matric_number):
             continue
 
         height, width = image.shape[:2]
+
         detector.setInputSize((width, height))
 
         _, faces = detector.detect(image)
@@ -171,7 +142,11 @@ def extract_student_embeddings(matric_number):
         if not check_image_quality(image, face):
             continue
 
-        aligned_face = recognizer.alignCrop(image, face)
+        aligned_face = recognizer.alignCrop(
+            image,
+            face
+        )
+
         feature = recognizer.feature(aligned_face)
 
         feature = np.asarray(
@@ -194,47 +169,47 @@ def extract_student_embeddings(matric_number):
             "No usable facial embeddings could be extracted."
         )
 
-    return np.asarray(embeddings, dtype=np.float32)
+    return np.asarray(
+        embeddings,
+        dtype=np.float32
+    )
 
 
 def update_student_embeddings(matric_number):
 
-    new_embeddings = extract_student_embeddings(matric_number)
+    from results.models import Student, StudentFaceEmbedding
 
-    if os.path.exists(EMBEDDINGS_FILE):
+    new_embeddings = extract_student_embeddings(
+        matric_number
+    )
 
-        existing_embeddings = np.load(
-            EMBEDDINGS_FILE,
-            allow_pickle=True
-        ).item()
+    student = Student.objects.get(
+        matric_number=matric_number
+    )
 
-        if not isinstance(existing_embeddings, dict):
-            raise ValueError("Existing embeddings file is invalid.")
+    with transaction.atomic():
 
-        updated_embeddings = existing_embeddings.copy()
+        StudentFaceEmbedding.objects.filter(
+            student=student
+        ).delete()
 
-        backup_embeddings()
-
-    else:
-        updated_embeddings = {}
-
-    updated_embeddings[matric_number] = new_embeddings
-
-    save_embeddings_atomically(updated_embeddings)
+        StudentFaceEmbedding.objects.create(
+            student=student,
+            embedding_data=new_embeddings.tolist()
+        )
 
     return {
         "matric_number": matric_number,
         "images_processed": len(new_embeddings),
-        "total_students": len(updated_embeddings)
+        "total_students": StudentFaceEmbedding.objects.values(
+            "student_id"
+        ).distinct().count()
     }
 
 
 def delete_student_facial_data(matric_number):
-    """
-    Remove one student's embeddings and facial dataset.
 
-    Other students' embeddings and dataset folders remain untouched.
-    """
+    from results.models import StudentFaceEmbedding
 
     student_folder = os.path.realpath(
         os.path.join(DATASET_PATH, matric_number)
@@ -242,7 +217,6 @@ def delete_student_facial_data(matric_number):
 
     dataset_root = os.path.realpath(DATASET_PATH)
 
-    # Prevent accidental deletion outside the dataset directory.
     if os.path.commonpath(
         [dataset_root, student_folder]
     ) != dataset_root:
@@ -251,35 +225,23 @@ def delete_student_facial_data(matric_number):
     embedding_removed = False
     folder_removed = False
 
-    # Remove only this student's embedding.
-    if os.path.isfile(EMBEDDINGS_FILE):
+    # Remove database embeddings if they still exist.
+    # They may already have been cascade-deleted with the student.
 
-        existing_embeddings = np.load(
-            EMBEDDINGS_FILE,
-            allow_pickle=True
-        ).item()
+    embeddings = StudentFaceEmbedding.objects.filter(
+        student__matric_number=matric_number
+    )
 
-        if not isinstance(existing_embeddings, dict):
-            raise ValueError("Existing embeddings file is invalid.")
+    if embeddings.exists():
 
-        if matric_number in existing_embeddings:
+        embeddings.delete()
+        embedding_removed = True
 
-            updated_embeddings = existing_embeddings.copy()
+    # Remove only this student's temporary image folder.
 
-            # Back up before modifying.
-            backup_embeddings()
-
-            updated_embeddings.pop(matric_number)
-
-            save_embeddings_atomically(updated_embeddings)
-
-            embedding_removed = True
-
-    # Remove only this student's image folder.
     if os.path.isdir(student_folder):
 
         shutil.rmtree(student_folder)
-
         folder_removed = True
 
     return {
