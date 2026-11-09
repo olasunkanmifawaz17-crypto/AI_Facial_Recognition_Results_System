@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,6 +57,38 @@
             margin-top: 15px;
             font-weight: bold;
         }
+
+        /* Verification progress bar */
+        .progress-container {
+            background: #ddd;
+            height: 14px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 15px 0 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #16834a;
+            border-radius: 20px;
+            transition: width 0.25s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .match-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+        }
+
     </style>
 </head>
 
@@ -91,6 +124,20 @@
     <button id="captureBtn" disabled>Start Verification</button>
 
     <p id="status">Camera not started.</p>
+
+    <!-- Verification progress -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="progress-text" id="progressText">
+        0 / 8 frames processed
+    </div>
+
+    <div class="match-text" id="matchText">
+        Matching frames: 0 / 8
+    </div>
+
     <p id="result"></p>
 
 </div>
@@ -109,8 +156,52 @@
     const stopBtn = document.getElementById("stopBtn");
     const captureBtn = document.getElementById("captureBtn");
 
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const matchText = document.getElementById("matchText");
+
+    const TOTAL_FRAMES = 8;
+
     let cameraStream = null;
     let verifying = false;
+
+    // UPDATE PROGRESS BAR
+    function updateProgress(progress, matches) {
+
+        progress = Math.max(
+            0,
+            Math.min(Number(progress) || 0, TOTAL_FRAMES)
+        );
+
+        matches = Math.max(
+            0,
+            Math.min(Number(matches) || 0, TOTAL_FRAMES)
+        );
+
+        const percentage = (progress / TOTAL_FRAMES) * 100;
+
+        progressBar.style.width = percentage + "%";
+
+        progressText.textContent =
+            `${progress} / ${TOTAL_FRAMES} frames processed`;
+
+        matchText.textContent =
+            `Matching frames: ${matches} / ${TOTAL_FRAMES}`;
+    }
+
+
+    // RESET PROGRESS
+    function resetProgress() {
+
+        progressBar.style.width = "0%";
+
+        progressText.textContent =
+            `0 / ${TOTAL_FRAMES} frames processed`;
+
+        matchText.textContent =
+            `Matching frames: 0 / ${TOTAL_FRAMES}`;
+    }
+
 
     // START CAMERA
     startBtn.onclick = async function () {
@@ -135,6 +226,8 @@
 
             status.textContent = "Camera started successfully.";
             result.textContent = "";
+
+            resetProgress();
 
             captureBtn.disabled = false;
             startBtn.disabled = true;
@@ -195,6 +288,8 @@
         }
 
         verifying = true;
+
+        resetProgress();
 
         captureBtn.textContent = "Stop Verification";
         matricInput.disabled = true;
@@ -270,12 +365,18 @@
                     break;
                 }
 
-                status.textContent =
-                    `Progress: ${data.progress || 0}/8 | Matching frames: ${data.matches || 0}/8`;
+                // Update visual progress
+                updateProgress(
+                    data.progress,
+                    data.matches
+                );
 
                 if (data.verified) {
 
                     verifying = false;
+
+                    // Complete the progress bar
+                    updateProgress(TOTAL_FRAMES, TOTAL_FRAMES);
 
                     status.textContent =
                         "Identity successfully verified!";
