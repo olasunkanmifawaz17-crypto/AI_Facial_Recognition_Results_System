@@ -94,6 +94,10 @@
         #startButton { background: #1769aa; }
         #stopButton { background: #c0392b; }
 
+        #startButton.completed {
+            background: #16834a;
+        }
+
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -150,17 +154,17 @@
     </div>
 
     <div class="progress-text" id="progressText">
-        0 / 30 images captured
+        0 / 20 images captured
     </div>
 
     <div class="embedding-info" id="embeddingInfo"></div>
 
     <div class="buttons">
-        <button id="startButton" onclick="startRegistration()">
+        <button id="startButton" type="button" onclick="startRegistration()">
             Start Registration
         </button>
 
-        <button id="stopButton" onclick="stopRegistration()" disabled>
+        <button id="stopButton" type="button" onclick="stopRegistration()" disabled>
             Stop Registration
         </button>
     </div>
@@ -191,6 +195,7 @@ const csrfToken = document.querySelector(
 ).value;
 
 const studentId = "{{ student.pk }}";
+const TOTAL_IMAGES = 20;
 
 let cameraStream = null;
 let registrationRunning = false;
@@ -211,6 +216,10 @@ function stopCamera() {
 }
 
 async function startRegistration() {
+
+    if (registrationComplete) {
+        return;
+    }
 
     startButton.disabled = true;
 
@@ -327,7 +336,15 @@ async function processFrames() {
                 instruction.textContent = "Registration completed!";
 
                 stopButton.disabled = true;
+
+                // Turn the Start button into a working navigation button.
                 startButton.textContent = "Completed";
+                startButton.disabled = false;
+                startButton.classList.add("completed");
+
+                startButton.onclick = function () {
+                    window.location.href = "/admin/results/student/";
+                };
 
                 if (data.embedding_ready === true) {
 
@@ -401,7 +418,7 @@ async function stopRegistration() {
         instruction.textContent = "Registration stopped.";
 
         progressBar.style.width = "0%";
-        progressText.textContent = "Incomplete registration";
+        progressText.textContent = "0 / 20 images captured";
 
     } catch (error) {
 
