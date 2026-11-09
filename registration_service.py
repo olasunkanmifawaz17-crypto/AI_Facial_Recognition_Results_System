@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATASET_PATH = BASE_DIR / "dataset"
 MODEL_PATH = BASE_DIR / "models" / "face_detection_yunet_2023mar.onnx"
 
-TARGET_TOTAL = 30
+TARGET_TOTAL = 20
 
 STABLE_FRAMES_REQUIRED = 3
 POSE_FRAMES_REQUIRED = 3
@@ -29,8 +29,8 @@ MAX_BRIGHTNESS = 210
 CALIBRATION_SAMPLES = 8
 MIN_SAMPLE_DIFFERENCE = 3.0
 
-LEFT_THRESHOLD = 0.20
-RIGHT_THRESHOLD = -0.18
+LEFT_THRESHOLD = 0.12
+RIGHT_THRESHOLD = -0.12
 
 FRONT_HORIZONTAL_LIMIT = 0.12
 FRONT_VERTICAL_LIMIT = 0.12
@@ -38,9 +38,9 @@ FRONT_VERTICAL_LIMIT = 0.12
 MAX_OTHER_AXIS_MOVEMENT = 0.25
 
 STAGES = [
-    ("Look directly at the camera", 12, "front"),
-    ("Turn your head slightly LEFT", 9, "left"),
-    ("Turn your head slightly RIGHT", 9, "right")
+    ("Look directly at the camera", 8, "front"),
+    ("Turn your head slightly LEFT", 6, "left"),
+    ("Turn your head slightly RIGHT", 6, "right")
 ]
 
 

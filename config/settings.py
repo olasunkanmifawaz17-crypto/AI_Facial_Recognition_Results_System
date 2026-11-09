@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
 
 # Automatically allow the Render hostname when deployed.
 render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
 
@@ -88,17 +89,27 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database: PostgreSQL online, SQLite locally.
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Database configuration
+# Local development uses SQLite by default.
+# Production uses Neon PostgreSQL when USE_NEON=True.
 
-if DATABASE_URL:
+DATABASE_URL = os.getenv("DATABASE_URL")
+USE_NEON = os.getenv("USE_NEON", "False").lower() == "true"
+
+if USE_NEON:
+    if not DATABASE_URL:
+        raise ValueError(
+            "USE_NEON is True, but DATABASE_URL is missing."
+        )
+
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=not DEBUG,
+            ssl_require=True,
         )
     }
+
 else:
     DATABASES = {
         "default": {

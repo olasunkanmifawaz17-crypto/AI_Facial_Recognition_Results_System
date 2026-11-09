@@ -23,6 +23,12 @@ from embedding_service import update_student_embeddings
 # Load recognition models once when Django starts.
 recognition_service = FaceRecognitionService()
 
+# Recognition settings.
+FRAMES_TO_CHECK = 8
+REQUIRED_MATCHES = 6
+MATCH_THRESHOLD = 0.55
+MIN_AVERAGE_SCORE = 0.55
+
 # Store verification progress separately for each session.
 verification_sessions = {}
 
@@ -110,7 +116,7 @@ def receive_frame(request):
 
         session = {
             "matric_number": matric_number,
-            "scores": deque(maxlen=15),
+            "scores": deque(maxlen=FRAMES_TO_CHECK),
             "verified": False
         }
 
@@ -139,16 +145,16 @@ def receive_frame(request):
     scores = list(session["scores"])
 
     matches = sum(
-        value >= 0.55 for value in scores
+        value >= MATCH_THRESHOLD for value in scores
     )
 
     average_score = float(np.mean(scores))
     progress = len(scores)
 
     verified = (
-        progress == 15
-        and matches >= 12
-        and average_score >= 0.55
+        progress == FRAMES_TO_CHECK
+        and matches >= REQUIRED_MATCHES
+        and average_score >= MIN_AVERAGE_SCORE
     )
 
     if verified:
